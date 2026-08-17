@@ -8,8 +8,16 @@
  * modals, dropdowns, and the compose editor - because everything is designed
  * for light mode and gets exactly one inversion.
  *
- * All rules key off the `karbon-ext-dark` class that content.js puts on
- * <html>, so this file is inert when the toggle is off.
+ * Email iframes: newer Karbon builds render email bodies inside cross-origin
+ * iframes (app.karbonhq.com/emailmanager). The iframe's rendered output is
+ * darkened by the page-level inversion like everything else - iframes must
+ * NOT be re-inverted like media, or the whole email stays light (that was
+ * bug #1 of v1.2). Media inside those frames is re-inverted from within:
+ * content.js also runs inside the frames and tags them with
+ * `karbon-ext-dark-frame`, which the rules at the bottom key off.
+ *
+ * All rules key off classes that content.js sets, so this file is inert when
+ * the toggle is off.
  */
 
 /* Backdrop behind the page (overscroll etc.) */
@@ -28,10 +36,11 @@ html.karbon-ext-dark body {
  * catches avatar divs that paint faces via inline background-image. The
  * :not() guard keeps nested media (e.g. an <img> inside an email table cell
  * that has its own background-image) from being re-inverted twice - only the
- * outermost media element gets the re-invert. */
+ * outermost media element gets the re-invert. Iframes are deliberately NOT
+ * in this list (see header comment). */
 html.karbon-ext-dark body
-  :is(img, video, iframe, [style*="background-image"]):not(
-    :is(img, video, iframe, [style*="background-image"]) *
+  :is(img, video, [style*="background-image"]):not(
+    :is(img, video, [style*="background-image"]) *
   ) {
   filter: invert(1) hue-rotate(180deg);
 }
@@ -40,3 +49,14 @@ html.karbon-ext-dark body
  * is near-white like the rest of the app, so it gets the same single
  * inversion as everything else. (An earlier version re-inverted it based on
  * a misreading of unreliable screenshots - that left it white in dark mode.) */
+
+/* ---- Inside Karbon's email iframes (tagged by content.js) ----
+ * The frame's visual output is already inverted by the parent page, so the
+ * frame body gets no filter of its own. Media inside the frame is re-inverted
+ * here so photos and logos keep their true colors. */
+html.karbon-ext-dark-frame
+  :is(img, video, [style*="background-image"]):not(
+    :is(img, video, [style*="background-image"]) *
+  ) {
+  filter: invert(1) hue-rotate(180deg);
+}
