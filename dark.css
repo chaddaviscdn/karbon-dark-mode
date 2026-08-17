@@ -60,3 +60,62 @@ html.karbon-ext-dark-frame
   ) {
   filter: invert(1) hue-rotate(180deg);
 }
+
+/* ============================================================
+ * HIGH CONTRAST mode (karbon-ext-hc)
+ *
+ * Built for low vision, color vision deficiency, and users who rely on
+ * strong visual boundaries (WCAG 2.2 SC 1.4.3 contrast-minimum and
+ * SC 1.4.11 non-text contrast). Differences from regular dark mode:
+ *
+ *  - Full-strength inversion (invert(1), not 0.93): white becomes true
+ *    black, so Karbon's mid-grey text and outlines land at much higher
+ *    luminance contrast against the background.
+ *  - Header anchor bands: the work-item hero panel and the page header get
+ *    an elevated band with a thick underline, restoring the "instant
+ *    banner" orientation the old dark header provided.
+ *  - A thick, unmistakable focus ring for keyboard navigation.
+ * ============================================================ */
+
+html.karbon-ext-hc {
+  background: #000;
+}
+
+html.karbon-ext-hc body {
+  background: #fff;
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Media keeps its true colors - full inversion is exactly reversible. */
+html.karbon-ext-hc body
+  :is(img, video, [style*="background-image"]):not(
+    :is(img, video, [style*="background-image"]) *
+  ) {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Header anchor bands. Colors are pre-inversion: #ececec renders as a
+ * near-black elevated band distinct from the pure-black canvas, and the
+ * #3a3a3a underline renders as a bright ~3px rule that reads as a hard
+ * boundary between "who/what am I working on" and the workspace below. */
+html.karbon-ext-hc body .work-item-hero-panel,
+html.karbon-ext-hc body main > header {
+  background: #ececec !important;
+  box-shadow: inset 0 -3px 0 0 #3a3a3a !important;
+}
+
+/* Keyboard focus must be unmissable (pre-inversion #0057d8 renders as a
+ * bright cyan-blue ring on the dark canvas). */
+html.karbon-ext-hc body :focus-visible {
+  outline: 3px solid #0057d8 !important;
+  outline-offset: 2px !important;
+}
+
+/* Inside Karbon's email iframes: parent already inverts the frame's visual
+ * output; re-invert media from within (same as dark mode). */
+html.karbon-ext-hc-frame
+  :is(img, video, [style*="background-image"]):not(
+    :is(img, video, [style*="background-image"]) *
+  ) {
+  filter: invert(1) hue-rotate(180deg);
+}

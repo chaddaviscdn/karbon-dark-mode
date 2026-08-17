@@ -6,13 +6,16 @@
 // (e.g. the triage filter menu, built as a khq web component popover inside
 // a shadow root, where page CSS can't select either).
 //
-// This script patches showPopover/showModal to apply the same inversion
-// directly to the top-layer element at show time. It reads the current mode
-// from the `karbon-ext-dark` class that content.js maintains on <html>, so
-// it needs no storage access of its own.
+// This script patches showPopover/showModal to apply the active mode's
+// inversion directly to the top-layer element at show time. It reads the
+// current mode from the classes content.js maintains on <html>, so it needs
+// no storage access of its own.
 
 (() => {
-  const FILTER = 'invert(0.93) hue-rotate(180deg)';
+  const FILTERS = {
+    'karbon-ext-dark': 'invert(0.93) hue-rotate(180deg)',
+    'karbon-ext-hc': 'invert(1) hue-rotate(180deg)',
+  };
   const MEDIA_CSS =
     '[data-karbon-ext-toplayer] ' +
     ':is(img, video, [style*="background-image"]):not(' +
@@ -21,8 +24,13 @@
 
   const styledRoots = new WeakSet();
 
-  const darkOn = () =>
-    document.documentElement.classList.contains('karbon-ext-dark');
+  function activeFilter() {
+    const cl = document.documentElement.classList;
+    for (const cls of Object.keys(FILTERS)) {
+      if (cl.contains(cls)) return FILTERS[cls];
+    }
+    return null;
+  }
 
   // Media re-invert rules must live inside the element's root (document or
   // shadow root) because outside CSS can't select into shadow DOM.
@@ -36,9 +44,10 @@
   }
 
   function decorate(el) {
-    if (darkOn()) {
+    const filter = activeFilter();
+    if (filter) {
       el.setAttribute('data-karbon-ext-toplayer', '');
-      el.style.setProperty('filter', FILTER);
+      el.style.setProperty('filter', filter);
       // A solid base so the inversion produces a dark panel even if the
       // popover itself is transparent.
       if (!el.style.backgroundColor) {

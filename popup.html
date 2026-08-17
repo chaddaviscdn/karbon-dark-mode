@@ -15,8 +15,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 16px;
+      padding: 16px 16px 12px;
     }
+    .row--sub { padding: 0 16px 14px; }
     .title {
       display: flex;
       align-items: center;
@@ -96,6 +97,13 @@
     <span class="title"><span class="moon">&#127769;</span> Karbon Dark Mode</span>
     <label class="switch">
       <input type="checkbox" id="toggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div class="row row--sub">
+    <span class="title"><span class="moon">&#9681;</span> High Contrast</span>
+    <label class="switch">
+      <input type="checkbox" id="toggleHc">
       <span class="slider"></span>
     </label>
   </div>
