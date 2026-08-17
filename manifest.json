@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Karbon Dark Mode",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "A dark mode toggle for Karbon (app2.karbonhq.com). Uniform dark theme across the whole app, including email bodies.",
   "permissions": ["storage"],
   "action": {

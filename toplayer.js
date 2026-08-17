@@ -13,11 +13,14 @@
 
 (() => {
   const FILTER = 'invert(0.93) hue-rotate(180deg)';
+  // Exact inverse of the popover filter (see dark.css for the derivation) so
+  // avatars inside menus are restored pixel-exactly.
+  const MEDIA_FILTER = 'url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cfilter%20id%3D%27kdm%27%20color-interpolation-filters%3D%27sRGB%27%3E%3CfeColorMatrix%20type%3D%27matrix%27%20values%3D%270.667442%20-1.662791%20-0.167442%200%201.081395%20-0.495349%20-0.5%20-0.167442%200%201.081395%20-0.495349%20-1.662791%200.995349%200%201.081395%200%200%200%201%200%27/%3E%3C/filter%3E%3C/svg%3E#kdm")';
   const MEDIA_CSS =
     '[data-karbon-ext-toplayer] ' +
     ':is(img, video, [style*="background-image"]):not(' +
     ':is(img, video, [style*="background-image"]) *' +
-    ') { filter: invert(1) hue-rotate(180deg); }';
+    ') { filter: ' + MEDIA_FILTER + '; }';
 
   const styledRoots = new WeakSet();
 
