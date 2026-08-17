@@ -1,0 +1,42 @@
+/* Karbon Dark Mode
+ *
+ * Strategy: keep Karbon in its normal light theme and invert the whole page
+ * once at the body level (softened invert + hue-rotate so blues stay blue),
+ * then re-invert embedded media (images, avatars, videos) so they keep their
+ * true colors. This is uniform across every Karbon surface - the new React
+ * shell, legacy Ember pages, email bodies with arbitrary sender HTML,
+ * modals, dropdowns, and the compose editor - because everything is designed
+ * for light mode and gets exactly one inversion.
+ *
+ * All rules key off the `karbon-ext-dark` class that content.js puts on
+ * <html>, so this file is inert when the toggle is off.
+ */
+
+/* Backdrop behind the page (overscroll etc.) */
+html.karbon-ext-dark {
+  background: #111;
+}
+
+/* One inversion for the entire app. The explicit white background gives the
+ * filter a solid base so the result is a consistent dark canvas. */
+html.karbon-ext-dark body {
+  background: #fff;
+  filter: invert(0.93) hue-rotate(180deg);
+}
+
+/* Media keeps its real colors: re-invert exactly once. The attribute clause
+ * catches avatar divs that paint faces via inline background-image. The
+ * :not() guard keeps nested media (e.g. an <img> inside an email table cell
+ * that has its own background-image) from being re-inverted twice - only the
+ * outermost media element gets the re-invert. */
+html.karbon-ext-dark body
+  :is(img, video, iframe, [style*="background-image"]):not(
+    :is(img, video, iframe, [style*="background-image"]) *
+  ) {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Note: no special-casing for the work-item hero panel. Its native background
+ * is near-white like the rest of the app, so it gets the same single
+ * inversion as everything else. (An earlier version re-inverted it based on
+ * a misreading of unreliable screenshots - that left it white in dark mode.) */
