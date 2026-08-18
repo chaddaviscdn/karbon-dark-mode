@@ -19,14 +19,98 @@
 
 (() => {
   const FILTER = 'invert(0.93) hue-rotate(180deg)';
-  // Exact inverse of FILTER (see dark.css for the derivation) so avatars
-  // inside menus and dialogs are restored pixel-exactly.
-  const MEDIA_FILTER = 'url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cfilter%20id%3D%27kdm%27%20color-interpolation-filters%3D%27sRGB%27%3E%3CfeColorMatrix%20type%3D%27matrix%27%20values%3D%270.667442%20-1.662791%20-0.167442%200%201.081395%20-0.495349%20-0.5%20-0.167442%200%201.081395%20-0.495349%20-1.662791%200.995349%200%201.081395%200%200%200%201%200%27/%3E%3C/filter%3E%3C/svg%3E#kdm")';
+  // Exact inverse of FILTER as an SVG color matrix (see content.js), so
+  // avatars inside menus and dialogs are restored pixel-exactly. Referenced
+  // as a same-document fragment; a copy of the definition is injected into
+  // each shadow root because fragment lookups are tree-scoped.
+  const MEDIA_FILTER_ID = 'karbon-ext-media-restore';
+  const MEDIA_MATRIX =
+    '0.667442 -1.662791 -0.167442 0 1.081395 ' +
+    '-0.495349 -0.5 -0.167442 0 1.081395 ' +
+    '-0.495349 -1.662791 0.995349 0 1.081395 ' +
+    '0 0 0 1 0';
+  const MEDIA_DEF_SVG =
+    '<svg width="0" height="0" aria-hidden="true">' +
+    '<filter id="' + MEDIA_FILTER_ID + '" color-interpolation-filters="sRGB">' +
+    '<feColorMatrix type="matrix" values="' + MEDIA_MATRIX + '"/>' +
+    '</filter></svg>';
   const MEDIA_CSS =
     '[data-karbon-ext-toplayer] ' +
     ':is(img, video, [style*="background-image"]):not(' +
     ':is(img, video, [style*="background-image"]) *' +
-    ') { filter: ' + MEDIA_FILTER + '; }';
+    ') { filter: url(#' + MEDIA_FILTER_ID + '); }';
+
+  // Media inside SHADOW ROOTS is unreachable by any page-level stylesheet,
+  // so avatars rendered by web components (khq-avatar etc.) were being
+  // inverted by the page filter with no restore. Every shadow root gets its
+  // own copy of the restore rule + filter definition, injected at
+  // attachShadow time and toggled with the mode.
+  const SHADOW_MEDIA_CSS =
+    ':is(img, video, [style*="background-image"]):not(' +
+    ':is(img, video, [style*="background-image"]) *' +
+    ') { filter: url(#' + MEDIA_FILTER_ID + '); }\n' + MEDIA_CSS;
+
+  const shadowStyles = [];
+  const registeredRoots = new WeakSet();
+
+  function darkClassOn() {
+    return document.documentElement.classList.contains('karbon-ext-dark');
+  }
+
+  function makeDefHolder() {
+    const holder = document.createElement('div');
+    holder.setAttribute('aria-hidden', 'true');
+    holder.style.cssText =
+      'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
+    holder.innerHTML = MEDIA_DEF_SVG;
+    return holder;
+  }
+
+  function registerRoot(root) {
+    if (registeredRoots.has(root)) return;
+    registeredRoots.add(root);
+    const style = document.createElement('style');
+    style.textContent = SHADOW_MEDIA_CSS;
+    style.media = darkClassOn() ? 'all' : 'not all';
+    root.appendChild(style);
+    root.appendChild(makeDefHolder());
+    shadowStyles.push(style);
+  }
+
+  const attachShadow = Element.prototype.attachShadow;
+  if (attachShadow) {
+    const wrappedAttach = function attachShadowWrapped(init) {
+      const root = attachShadow.call(this, init);
+      try { registerRoot(root); } catch (e) { /* never break the app */ }
+      return root;
+    };
+    wrappedAttach.toString = () => attachShadow.toString();
+    Element.prototype.attachShadow = wrappedAttach;
+  }
+
+  // Toggle all shadow-root styles when the mode class changes, and sweep any
+  // open roots that might predate the patch.
+  function sweepRoots(node, depth) {
+    if (depth > 10) return;
+    for (const el of node.querySelectorAll('*')) {
+      if (el.shadowRoot) {
+        registerRoot(el.shadowRoot);
+        sweepRoots(el.shadowRoot, depth + 1);
+      }
+    }
+  }
+  new MutationObserver(() => {
+    const m = darkClassOn() ? 'all' : 'not all';
+    for (const s of shadowStyles) {
+      if (s.media !== m) s.media = m;
+    }
+  }).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+    try { sweepRoots(document, 0); } catch (e) { /* ignore */ }
+  });
 
   const styledRoots = new WeakSet();
 
@@ -67,13 +151,23 @@
   }
 
   // Media re-invert rules must live inside each target's root (document or
-  // shadow root) because outside CSS can't select into shadow DOM.
+  // shadow root) because outside CSS can't select into shadow DOM - and each
+  // shadow root also needs its own copy of the SVG filter definition, since
+  // url(#id) lookups are scoped to the tree the style lives in.
   function ensureRootStyle(node) {
     const root = node.getRootNode();
     if (styledRoots.has(root)) return;
     const s = document.createElement('style');
     s.textContent = MEDIA_CSS;
     (root.head || root).appendChild(s);
+    if (root instanceof ShadowRoot) {
+      const holder = document.createElement('div');
+      holder.setAttribute('aria-hidden', 'true');
+      holder.style.cssText =
+        'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
+      holder.innerHTML = MEDIA_DEF_SVG;
+      root.appendChild(holder);
+    }
     styledRoots.add(root);
   }
 
