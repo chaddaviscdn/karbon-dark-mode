@@ -15,8 +15,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 16px;
+      padding: 16px 16px 12px;
     }
+    .row--sub { padding: 0 16px 14px; }
+    input:checked + .slider--retro { background: #ff00aa; }
     .title {
       display: flex;
       align-items: center;
@@ -97,6 +99,13 @@
     <label class="switch">
       <input type="checkbox" id="toggle">
       <span class="slider"></span>
+    </label>
+  </div>
+  <div class="row row--sub">
+    <span class="title"><span class="moon">&#128377;&#65039;</span> Retro &rsquo;90s</span>
+    <label class="switch">
+      <input type="checkbox" id="toggleRetro">
+      <span class="slider slider--retro"></span>
     </label>
   </div>
   <div class="hint" id="hint">Applies to app2.karbonhq.com</div>

@@ -54,7 +54,8 @@
   const registeredRoots = new WeakSet();
 
   function darkClassOn() {
-    return document.documentElement.classList.contains('karbon-ext-dark');
+    const cl = document.documentElement.classList;
+    return cl.contains('karbon-ext-dark') || cl.contains('karbon-ext-retro');
   }
 
   function makeDefHolder() {
@@ -114,8 +115,7 @@
 
   const styledRoots = new WeakSet();
 
-  const darkOn = () =>
-    document.documentElement.classList.contains('karbon-ext-dark');
+  const darkOn = () => darkClassOn();
 
   function hasBox(el) {
     const r = el.getBoundingClientRect();

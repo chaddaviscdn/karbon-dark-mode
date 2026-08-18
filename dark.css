@@ -46,3 +46,29 @@ html.karbon-ext-dark body {
 /* ---- Inside Karbon's email iframes ----
  * The frame's visual output is already inverted by the parent page; media
  * re-inversion inside frames is injected by content.js (see note above). */
+/* ============================================================
+ * RETRO '90s mode (karbon-ext-retro)
+ *
+ * Same proven inversion base as dark mode; content.js then deals every
+ * major UI section a loud duo-tone color flavor (sepia colorize + hue
+ * rotation + neon border) from a shuffled deck, so neighboring sections
+ * always look distinctly different. Reshuffles every page load.
+ * ============================================================ */
+
+html.karbon-ext-retro {
+  background: #111;
+}
+
+html.karbon-ext-retro body {
+  background: #fff;
+  filter: invert(0.93) hue-rotate(180deg);
+}
+
+/* (Scanlines were tried and cut - too "broken CRT". The section colors
+ * carry the retro look on their own.) */
+/* Let a flavored card's own color show through: its inner wrappers paint
+ * their own backgrounds otherwise. Deeper elements (status chips, progress
+ * bars) keep their colors. */
+html.karbon-ext-retro [data-karbon-retro="card"] > * {
+  background-color: transparent !important;
+}
